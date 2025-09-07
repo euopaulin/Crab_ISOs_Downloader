@@ -1,56 +1,79 @@
 import requests
 import os
-import isos_lib
+from isos_lib import isos_disponiveis
 
-#Esse aqui vai listar as isos
-isos_disponiveis = isos_lib.isos_disponiveis
-nome_exibicao = "\n".join(
-        [iso["nome_exibicao"] for iso in isos_disponiveis.values()])
-print(nome_exibicao)
-iso_selecionada = input("Digite o nome do ISO que deseja baixar: ")
-nome_exibicao = iso_selecionada
-iso_selecionada = isos_disponiveis.get(nome_exibicao)
+class ISODownloader:
+    def __init__(self):
+        self.isos = isos_disponiveis
+        self.iso_selecionada = None
 
-if iso_selecionada is None:
-        print("Nenhum ISO selecionado ou nome digitado errado." 
-              "\n" "Tente novamente.")
-        
-else:
-        print("ISO selecionado:", iso_selecionada["nome_exibicao"])
+    def exibir_menu(self):
+        print("\nISOs disponíveis:")
+        for nome_exibicao in self.isos.values():
+            print(f"- {nome_exibicao['nome_exibicao']}")
 
-#Esse aqui vai fazer o download da iso
-def download_iso():
-    try:
-        resposta = requests.get(iso_selecionada["url"], stream=True)
-        resposta.raise_for_status()
-    except requests.exceptions.RequestException as erro:
-        print("Erro ao fazer o download:", erro)
+    def selecionar_iso(self):
+        while True:
+            nome_exibicao = input("\nDigite o nome do ISO que deseja baixar: ")
+            self.iso_selecionada = self.isos.get(nome_exibicao)
+            if self.iso_selecionada:
+                print(f"ISO selecionado: {self.iso_selecionada['nome_exibicao']}")
+                return True
+            else:
+                print("ISO não encontrado. Por favor, tente novamente.")
+                self.exibir_menu()
 
-    if resposta.status_code == 200:
-        print("Requisição bem-sucedida!")
-    else:
-        print("Erro na requisição:", resposta.status_code)
+    def obter_caminho_destino(self):
+        pasta = input("Digite o caminho da pasta de destino para salvar o ISO: ")
+        pasta_destino = os.path.abspath(pasta)
+        print(f'Pasta selecionada: {pasta_destino}')
 
-    tamanho_total = float(resposta.headers.get('content-length', 0))
-    tamanho_total_mb = tamanho_total / (1024 * 1024)
-    print(f"Tamanho total do arquivo: {tamanho_total_mb:.2f} MB")
+        if not os.path.exists(pasta_destino):
+            try:
+                os.makedirs(pasta_destino)
+                print(f"Pasta criada: {pasta_destino}")
+            except OSError as e:
+                print(f"Erro ao criar a pasta: {e}")
+                return None
 
-    pasta = input("Digite o caminho da pasta de destino para salvar o ISO: ")
-    pasta_destino = pasta
-    print(f'Pasta selecionada: {pasta_destino}')
-    caminho_arquivo = os.path.join(pasta_destino,
-                                   iso_selecionada["nome_arquivo"])
-    print(f'Salvando em: {caminho_arquivo}')
+        caminho_arquivo = os.path.join(pasta_destino, self.iso_selecionada["nome_arquivo"])
+        return caminho_arquivo
 
-    try:
-        resposta = requests.get(iso_selecionada["url"], stream=True)
-        resposta.raise_for_status()
-        with open(caminho_arquivo, 'wb') as arquivo:
-            for dados in resposta.iter_content(chunk_size=8192):
-                arquivo.write(dados)
+    def download_iso(self):
+        if not self.iso_selecionada:
+            print("Nenhum ISO selecionado para download.")
+            return
 
-        print(f"Download concluído: {caminho_arquivo}")
-    except requests.exceptions.RequestException as erro2:
-        print("Erro ao fazer o download:", erro2)
-        return
-download_iso()
+        caminho_arquivo = self.obter_caminho_destino()
+        if not caminho_arquivo:
+            return
+
+        print(f'Salvando em: {caminho_arquivo}')
+
+        try:
+            with requests.get(self.iso_selecionada["url"], stream=True) as resposta:
+                resposta.raise_for_status()
+                tamanho_total = float(resposta.headers.get('content-length', 0))
+                tamanho_total_mb = tamanho_total / (1024 * 1024)
+                print(f"Tamanho total do arquivo: {tamanho_total_mb:.2f} MB")
+
+                tamanho_baixado = 0
+                with open(caminho_arquivo, 'wb') as arquivo:
+                    for dados in resposta.iter_content(chunk_size=8192):
+                        arquivo.write(dados)
+                        tamanho_baixado += len(dados)
+                        porcentagem = (tamanho_baixado / tamanho_total) * 100
+                        print(f"Progresso: {porcentagem:.2f}%", end="\r")
+
+            print("\nDownload concluído com sucesso!")
+        except requests.exceptions.RequestException as e:
+            print(f"Erro ao fazer o download: {e}")
+
+def main():
+    downloader = ISODownloader()
+    downloader.exibir_menu()
+    if downloader.selecionar_iso():
+        downloader.download_iso()
+
+if __name__ == "__main__":
+    main()
