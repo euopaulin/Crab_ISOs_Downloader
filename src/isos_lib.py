@@ -1,9 +1,9 @@
 isos_disponiveis = {
     "ubuntu Desktop": {
-        "nome_exibicao": "Ubuntu Desktop 24.04 LTS",
+        "nome_exibicao": "Ubuntu",
         "url":
-        "https://ubuntu.com/download/desktop/thank-you?version=24.04.3&architecture=amd64&lts=true",
-        "nome_arquivo": "ubuntu-24.04-desktop-amd64.iso"
+        "https://releases.ubuntu.com/24.04.3/ubuntu-24.04.3-desktop-amd64.iso?_gl=1*1krwy3w*_gcl_au*OTQyNTIxNjYwLjE3NTM5NjA4NzQ.",
+        "nome_arquivo": "ubuntu-24.04.iso"
     },
     "Windows 11": {
         "nome_exibicao": "Windows 11",

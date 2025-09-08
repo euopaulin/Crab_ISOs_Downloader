@@ -2,11 +2,13 @@ import requests
 import os
 from isos_lib import isos_disponiveis
 
+#Classe criada para gerenciar os atritutos das ISOs para depois ser chamada no código
 class ISODownloader:
     def __init__(self):
         self.isos = isos_disponiveis
         self.iso_selecionada = None
 
+#Função para exibir o menu de ISOs disponíveis
     def exibir_menu(self):
         print("\nISOs disponíveis:")
         for nome_exibicao in self.isos.values():
