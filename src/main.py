@@ -7,7 +7,6 @@ from tkinter import ttk
 from isos_lib import isos_disponiveis
 from tqdm import tqdm
 
-
 class ISODownloaderGUI:
     def __init__(self, master):
         self.master = master
