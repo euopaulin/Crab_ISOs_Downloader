@@ -1,80 +1,129 @@
 import requests
 import os
+import tkinter as tk
+import threading
+from tkinter import filedialog, messagebox
+from tkinter import ttk
 from isos_lib import isos_disponiveis
+from tqdm import tqdm
 
-#Classe criada para gerenciar os atritutos das ISOs para depois ser chamada no código
-class ISODownloader:
-    def __init__(self):
-        self.isos = isos_disponiveis
-        self.iso_selecionada = None
 
-    def exibir_menu(self):
-        print("\nISOs disponíveis:")
-        for nome_exibicao in self.isos.values():
-            print(f"- {nome_exibicao['nome_exibicao']}")
-
-    def selecionar_iso(self):
-        while True:
-            nome_exibicao = input("\nDigite o nome do ISO que deseja baixar: ")
-            self.iso_selecionada = self.isos.get(nome_exibicao)
-            if self.iso_selecionada:
-                print(f"ISO selecionado: {self.iso_selecionada['nome_exibicao']}")
-                return True
-            else:
-                print("ISO não encontrado. Por favor, tente novamente.")
-                self.exibir_menu()
-
-    def obter_caminho_destino(self):
-        pasta = input("Digite o caminho da pasta de destino para salvar o ISO: ")
-        pasta_destino = os.path.abspath(pasta)
-        print(f'Pasta selecionada: {pasta_destino}')
-
-        if not os.path.exists(pasta_destino):
-            try:
-                os.makedirs(pasta_destino)
-                print(f"Pasta criada: {pasta_destino}")
-            except OSError as e:
-                print(f"Erro ao criar a pasta: {e}")
-                return None
-
-        caminho_arquivo = os.path.join(pasta_destino, self.iso_selecionada["nome_arquivo"])
-        return caminho_arquivo
-
-    def download_iso(self):
-        if not self.iso_selecionada:
-            print("Nenhum ISO selecionado para download.")
-            return
-
-        caminho_arquivo = self.obter_caminho_destino()
-        if not caminho_arquivo:
-            return
-
-        print(f'Salvando em: {caminho_arquivo}')
+class ISODownloaderGUI:
+    def __init__(self, master):
+        self.master = master
+        master.title("CRAB ISO's Downloader", color="#f86227")
+        master.geometry("500x350")
 
         try:
-            with requests.get(self.iso_selecionada["url"], stream=True) as resposta:
-                resposta.raise_for_status()
-                tamanho_total = float(resposta.headers.get('content-length', 0))
-                tamanho_total_mb = tamanho_total / (1024 * 1024)
-                print(f"Tamanho total do arquivo: {tamanho_total_mb:.2f} MB")
+            self.logo = tk.PhotoImage(file="crab.png")
+            master.iconphoto(True, self.logo)
+        except tk.TclError:
+            print("Logo não encontrada. Continuando sem ícone.")
 
-                tamanho_baixado = 0
-                with open(caminho_arquivo, 'wb') as arquivo:
-                    for dados in resposta.iter_content(chunk_size=8192):
-                        arquivo.write(dados)
-                        tamanho_baixado += len(dados)
-                        porcentagem = (tamanho_baixado / tamanho_total) * 100
-                        print(f"Progresso: {porcentagem:.2f}%", end="\r")
+        self.isos = isos_disponiveis
+        self.iso_selecionada = None
+        self.caminho_destino = None
 
-            print("\nDownload concluído com sucesso!")
+        self.label_titulo = tk.Label(master, text="Selecione uma ISO para download", font=("Arial", 14))
+        self.label_titulo.pack(pady=10)
+
+        self.combo_iso = ttk.Combobox(master, state="readonly", width=40)
+        self.combo_iso['values'] = [iso['nome_exibicao'] for iso in self.isos.values()]
+        self.combo_iso.pack(pady=5)
+        self.combo_iso.bind("<<ComboboxSelected>>", self.on_iso_selected)
+
+        self.btn_pasta = tk.Button(master, text="Escolher Pasta de Destino", command=self.obter_caminho_destino)
+        self.btn_pasta.pack(pady=5)
+        self.label_caminho = tk.Label(master, text="Nenhum caminho selecionado")
+        self.label_caminho.pack(pady=5)
+
+        self.btn_download = tk.Button(master, text="Iniciar Download", command=self.iniciar_download, state=tk.DISABLED)
+        self.btn_download.pack(pady=10)
+
+        self.progressbar = ttk.Progressbar(master, orient="horizontal", length=400, mode="determinate")
+        self.progressbar.pack(pady=10)
+
+        self.label_status = tk.Label(master, text="Aguardando seleção...", font=("Arial", 10))
+        self.label_status.pack(pady=5)
+        
+        tk.Label(master, text="Desenvolvido por @euopaulin - 2025", font=("Arial", 8)).pack(side=tk.BOTTOM, pady=5)
+
+    def on_iso_selected(self, event):
+        nome_exibicao = self.combo_iso.get()
+        for iso_key, iso_data in self.isos.items():
+            if iso_data['nome_exibicao'] == nome_exibicao:
+                self.iso_selecionada = iso_data
+                break
+        self.label_status.config(text=f"ISO selecionado: {self.iso_selecionada['nome_exibicao']}")
+        if self.caminho_destino:
+            self.btn_download.config(state=tk.NORMAL)
+
+    def obter_caminho_destino(self):
+        self.caminho_destino = filedialog.askdirectory()
+        if self.caminho_destino:
+            self.label_caminho.config(text=f"Pasta selecionada: {self.caminho_destino}")
+            if self.iso_selecionada:
+                self.btn_download.config(state=tk.NORMAL)
+        else:
+            self.caminho_destino = None
+            self.btn_download.config(state=tk.DISABLED)
+
+    def iniciar_download(self):
+        if not self.iso_selecionada or not self.caminho_destino:
+            messagebox.showerror("Erro", "Por favor, selecione um ISO e uma pasta de destino.")
+            return
+
+        self.btn_download.config(state=tk.DISABLED)
+        self.label_status.config(text="Iniciando download...")
+        download_thread = threading.Thread(target=self.executar_download_em_thread)
+        download_thread.start()
+
+    def executar_download_em_thread(self):
+        caminho_arquivo = os.path.join(self.caminho_destino, self.iso_selecionada["nome_arquivo"])
+
+        try:
+            response = requests.get(self.iso_selecionada["url"], stream=True)
+            response.raise_for_status()
+
+            total_size_in_bytes = int(response.headers.get('content-length', 0))
+            self.progressbar["maximum"] = total_size_in_bytes
+
+            with open(caminho_arquivo, 'wb') as f:
+                with tqdm(total=total_size_in_bytes, unit='B', unit_scale=True, unit_divisor=1024, leave=False) as pbar:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            pbar.update(len(chunk))
+                            self.master.after(0, self.atualizar_barra_de_progresso, pbar.n)
+            
+            self.master.after(0, self.finalizar_download_sucesso)
+        
         except requests.exceptions.RequestException as e:
-            print(f"Erro ao fazer o download: {e}")
+            self.master.after(0, self.finalizar_download_erro, e)
+        except Exception as e:
+            self.master.after(0, self.finalizar_download_erro, f"Erro inesperado: {e}")
+
+    def atualizar_barra_de_progresso(self, valor):
+        self.progressbar['value'] = valor
+        self.label_status.config(text=f"Download em andamento: {valor/self.progressbar['maximum']:.2%}")
+
+    def finalizar_download_sucesso(self):
+        messagebox.showinfo("Sucesso", "Download concluído com sucesso!")
+        self.btn_download.config(state=tk.NORMAL)
+        self.progressbar['value'] = 0
+        self.label_status.config(text="Download concluído.")
+
+    def finalizar_download_erro(self, erro):
+        messagebox.showerror("Erro de Download", f"Erro ao fazer o download: {erro}")
+        self.btn_download.config(state=tk.NORMAL)
+        self.progressbar['value'] = 0
+        self.label_status.config(text="Download falhou.")
+
 
 def main():
-    downloader = ISODownloader()
-    downloader.exibir_menu()
-    if downloader.selecionar_iso():
-        downloader.download_iso()
+    root = tk.Tk()
+    app = ISODownloaderGUI(root)
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
