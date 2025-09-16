@@ -14,7 +14,7 @@ class ISODownloaderGUI:
         master.geometry("500x350")
 
         try:
-            self.logo = tk.PhotoImage(file="crab.png")
+            self.logo = tk.PhotoImage(file="img/crab.png")
             master.iconphoto(True, self.logo)
         except tk.TclError:
             print("Logo not found. Still no icon.")
