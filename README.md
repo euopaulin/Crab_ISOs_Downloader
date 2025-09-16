@@ -1,13 +1,43 @@
-## 💿 Gerenciador de Download de ISOs 💿 
-### A Solução para Profissionais e Entusiastas de TI
-#### Este software foi criado para simplificar o processo de obtenção de arquivos de imagem ISO de sistemas operacionais. Chega de perder tempo pesquisando e navegando por diferentes sites para encontrar a versão correta. Com apenas alguns cliques, você pode baixar a ISO desejada e prepará-la para o uso.
+### CRAB ISOs Downloader 🦀
+O CRAB ISOs Downloader é um software de desktop simples e intuitivo, desenvolvido em Python, que permite aos usuários baixar facilmente imagens ISO de sistemas operacionais. A aplicação utiliza uma interface gráfica (GUI) para simplificar o processo, permitindo que você selecione a ISO desejada e o diretório de destino com apenas alguns cliques.
 
-## Quem Pode se Beneficiar?💡 
-### O objetivo é atender a dois públicos principais:
+### Pré-requisitos
+Para executar este software, você precisa ter o `Python` instalado em seu sistema. Além disso, as seguintes bibliotecas Python são necessárias e podem ser instaladas via pip:
+```bash
+    pip install requests tqdm
+```
 
-#### Usuários Domésticos e Entusiastas: Qualquer pessoa que queira criar um pendrive bootável para instalar ou testar um novo sistema operacional, como Ubuntu ou Windows, de forma rápida e segura.
+Nota: A biblioteca `isos_lib` é um módulo customizado que você precisa criar, contendo a lista de ISOs disponíveis para download. O código de exemplo para essa biblioteca deve ser um dicionário semelhante a:
 
-#### Profissionais de TI e Suporte: Para técnicos e administradores de sistemas que lidam com a instalação e manutenção de máquinas diariamente. O software centraliza o download das ISOs, otimizando o fluxo de trabalho e garantindo que você tenha as ferramentas certas sempre à mão.
+```bash
+    # isos_lib.py
+isos_disponiveis = {
+    'Linux Mint': {
+        'nome_exibicao': 'Linux Mint 21.2',
+        'url': 'http://mirrors.evowise.com/linuxmint/images/linuxmint-21.2-cinnamon-64bit.iso',
+        'nome_arquivo': 'linuxmint-21.2-cinnamon-64bit.iso'
+    },
+    'Ubuntu': {
+        'nome_exibicao': 'Ubuntu 22.04.4 LTS',
+        'url': 'https://releases.ubuntu.com/jammy/ubuntu-22.04.4-desktop-amd64.iso',
+        'nome_arquivo': 'ubuntu-22.04.4-desktop-amd64.iso'
+    },
+}
+```
 
+### Como Usar
+Clone o Repositório: Obtenha o código-fonte do projeto.
 
-## Ferramentas utilizadas: ⚙️
+Instale as Dependências: Execute o comando de pip install acima.
+
+Execute o Programa: Abra o terminal na pasta do projeto e execute o script principal.
+
+```bash
+    python main.py
+```
+
+Selecione a ISO: No menu suspenso, escolha a imagem ISO que deseja baixar.
+
+Escolha a Pasta de Destino: Clique no botão "Choose Destination Folder" e selecione onde deseja salvar o arquivo.
+
+Inicie o Download: Clique em "Start Download" para começar a transferência. A barra de progresso irá mostrar o andamento.
