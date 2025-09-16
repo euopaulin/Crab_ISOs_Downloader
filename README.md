@@ -41,3 +41,10 @@ Selecione a ISO: No menu suspenso, escolha a imagem ISO que deseja baixar.
 Escolha a Pasta de Destino: Clique no botão "Choose Destination Folder" e selecione onde deseja salvar o arquivo.
 
 Inicie o Download: Clique em "Start Download" para começar a transferência. A barra de progresso irá mostrar o andamento.
+
+<p align="center">
+<img src="src\img\img1.png" alt="img1"/>
+<img src="src\img\img2.png" alt="img2"/>
+<img src="src\img\img3.png" alt="img3"/>
+</p>
+
