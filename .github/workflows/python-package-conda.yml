@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: Action for Crab ISOs Downloader
 
 on: [push]
 
@@ -20,7 +20,7 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda env update --file environment.yml --name base
+        conda run -n base pip install -r requirements.txt
     - name: Lint with flake8
       run: |
         conda install flake8
