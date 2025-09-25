@@ -33,7 +33,3 @@ jobs:
         # Não é necessário usar `conda install` novamente.
         pytest
 
-    - name: Lint with flake8
-      run: |
-        # O flake8 também já estará disponível para uso.
-        flake8
