@@ -10,18 +10,30 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
         python-version: '3.10'
+        
     - name: Add conda to system path
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
+        # $CONDA é uma variável de ambiente apontando para a raiz do diretório miniconda
+        echo "$CONDA/bin" >> $GITHUB_PATH
+
     - name: Install dependencies
       run: |
+        # Este único comando irá instalar TUDO listado no environment.yml.
+        # Ele gerencia as dependências do conda e do pip de forma coesa.
         conda env update --file environment.yml --name base
+
     - name: Test with pytest
       run: |
-        conda install pytest
+        # Agora que o pytest está instalado, você pode simplesmente executá-lo.
+        # Não é necessário usar `conda install` novamente.
         pytest
+
+    - name: Lint with flake8
+      run: |
+        # O flake8 também já estará disponível para uso.
+        flake8
